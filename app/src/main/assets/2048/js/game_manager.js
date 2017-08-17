@@ -167,7 +167,11 @@ GameManager.prototype.move = function (direction) {
           self.score += merged.value;
 
           // The mighty 2048 tile
-          if (merged.value ===64 ) self.won = true;//2048
+          if (merged.value ===64 ) {self.won = true;
+
+                        Android.showToast();
+
+          }//2048
         } else {
           self.moveTile(tile, positions.farthest);
         }

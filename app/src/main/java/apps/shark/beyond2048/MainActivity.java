@@ -1,9 +1,12 @@
 package apps.shark.beyond2048;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -11,15 +14,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Toast;
 
 import java.util.Locale;
+
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private long mLastTouch;
     private static final long mTouchThreshold = 2000;
     private Toast pressBackToast;
+
+
 
     @SuppressLint({ "SetJavaScriptEnabled", "NewApi", "ShowToast" })
     @Override
@@ -79,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setDatabaseEnabled(true);
         settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         settings.setDatabasePath(getFilesDir().getParentFile().getPath() + "/databases");
+        mWebView.addJavascriptInterface(new JavaScriptInterface(this), "Android");
 
         if (savedInstanceState != null) {
             // TODO: If app was minimized and Locale language was changed, we need to reload webview with changed language
@@ -117,6 +130,32 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public class JavaScriptInterface {
+        Context mContext;
+
+        /** Instantiate the interface and set the context */
+        JavaScriptInterface(Context c) {
+            mContext = c;
+        }
+
+        /** Show a toast from the web page */
+        @JavascriptInterface
+        public void showToast() {
+           // Toast.makeText(mContext, "u win", Toast.LENGTH_SHORT).show();
+            final KonfettiView konfettiView = (KonfettiView)findViewById(R.id.viewKonfetti);
+           // konfettiView.setVisibility(View.VISIBLE);
+            konfettiView.build()
+                    .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA)
+                    .setDirection(0.0, 359.0)
+                    .setSpeed(1f, 5f)
+                    .setFadeOutEnabled(true)
+                    .setTimeToLive(2000L)
+                    .addShapes(Shape.RECT, Shape.CIRCLE)
+                    .addSizes(new Size(12, 5f))
+                    .setPosition(-50f, konfettiView.getWidth() + 50f, -50f, -50f)
+                    .stream(300, 5000L);
+        }
+    }
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         mWebView.saveState(outState);
@@ -125,8 +164,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        // getMenuInflater().inflate(R.menu.main, menu);
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        if(item.getItemId()==R.id.about){
+            Intent intent = new Intent(MainActivity.this,about.class);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void saveFullScreen(boolean isFullScreen) {
